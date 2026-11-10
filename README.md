@@ -10,6 +10,7 @@ Builders submit explorer links as proof of deployment, but an explorer page alon
 node verify.mjs --address 0xD974a24a033714a64987539EF13986f63E51d426
 node verify.mjs --address 0xBBE090C5c5cCd8a93A899867DE41a5c13a8f628D --network studionet
 node verify.mjs --address 0x... --rpc https://your-node.example/api
+node verify.mjs --address 0xD974a24a033714a64987539EF13986f63E51d426 --file contracts/work_proof_verifier.py
 ```
 
 Options:
@@ -17,6 +18,7 @@ Options:
 - `--address` (required): the deployed contract address.
 - `--network`: `studionet` (default) or `bradbury`.
 - `--rpc`: a custom GenLayer node API endpoint, overrides `--network`.
+- `--file`: a local contract file to compare against the deployed code. Both sides are normalized (line endings unified, trailing blank lines trimmed) and hashed with SHA-256; the tool prints MATCH or MISMATCH and exits with code 1 on a mismatch, so it can gate a release script.
 
 No dependencies. Node 18 or newer (uses the built-in fetch).
 
@@ -39,7 +41,6 @@ Methods:
 
 ## Roadmap
 
-- Compare the deployed code hash against a local contract file (`--file contracts/my_contract.py`) and fail with a clear diff summary when they differ.
 - Call view methods directly (`--call total_tasks`) and print the live result.
 - Recorded-fixture test suite so the output format is covered without a live node.
 - Publish as an npm package with a `genlayer-verify` binary.
