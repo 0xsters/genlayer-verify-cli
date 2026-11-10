@@ -1,0 +1,10 @@
+{
+  "name": "genlayer-verify-cli",
+  "version": "0.1.0",
+  "description": "Inspect a deployed GenLayer Intelligent Contract: read its code and schema back from a GenLayer node and print what is actually deployed.",
+  "type": "module",
+  "bin": { "genlayer-verify": "./verify.mjs" },
+  "scripts": { "verify": "node verify.mjs" },
+  "license": "MIT",
+  "engines": { "node": ">=18" }
+}
