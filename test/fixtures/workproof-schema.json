@@ -1,0 +1,61 @@
+{
+  "ctor": {
+    "params": [],
+    "kwparams": {}
+  },
+  "methods": {
+    "create_task": {
+      "params": [
+        [
+          "title",
+          "string"
+        ],
+        [
+          "criteria",
+          "string"
+        ],
+        [
+          "evidence_url",
+          "string"
+        ],
+        [
+          "pass_score",
+          "int"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": false,
+      "ret": "int",
+      "payable": false
+    },
+    "get_task": {
+      "params": [
+        [
+          "task_id",
+          "int"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": true,
+      "ret": "string"
+    },
+    "resolve_task": {
+      "params": [
+        [
+          "task_id",
+          "int"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": false,
+      "ret": "null",
+      "payable": false
+    },
+    "total_tasks": {
+      "params": [],
+      "kwparams": {},
+      "readonly": true,
+      "ret": "int"
+    }
+  }
+}
