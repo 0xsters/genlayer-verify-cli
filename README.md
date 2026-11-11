@@ -11,6 +11,8 @@ node verify.mjs --address 0xD974a24a033714a64987539EF13986f63E51d426
 node verify.mjs --address 0xBBE090C5c5cCd8a93A899867DE41a5c13a8f628D --network studionet
 node verify.mjs --address 0x... --rpc https://your-node.example/api
 node verify.mjs --address 0xD974a24a033714a64987539EF13986f63E51d426 --file contracts/work_proof_verifier.py
+node verify.mjs --address 0xD974a24a033714a64987539EF13986f63E51d426 --call total_tasks
+node verify.mjs --address 0xD974a24a033714a64987539EF13986f63E51d426 --call get_task --args '[0]'
 ```
 
 Options:
@@ -19,8 +21,11 @@ Options:
 - `--network`: `studionet` (default) or `bradbury`.
 - `--rpc`: a custom GenLayer node API endpoint, overrides `--network`.
 - `--file`: a local contract file to compare against the deployed code. Both sides are normalized (line endings unified, trailing blank lines trimmed) and hashed with SHA-256; the tool prints MATCH or MISMATCH and exits with code 1 on a mismatch, so it can gate a release script.
+- `--call`: run one view method on the deployed contract and print its live result. The call goes through genlayer-js as a read-only `gen_call`: no wallet, no transaction, no state change. Only methods the schema marks `[view]` may be called; a write method is refused before anything is sent. Exits with code 1 when the node rejects the call (for example, reading a task id that does not exist).
+- `--args`: a JSON array of arguments for `--call`, for example `--args '[0]'`. The count must match the method's parameters.
 
-No dependencies. Node 18 or newer (uses the built-in fetch).
+Depends on genlayer-js (the same version the WorkProof app uses) for
+`--call`; run `npm install` first. Node 18 or newer.
 
 ## Example output
 
@@ -39,6 +44,28 @@ Methods:
   total_tasks() -> int  [view]
 ```
 
+## Calling a view method
+
+```bash
+$ node verify.mjs --address 0xD974a24a033714a64987539EF13986f63E51d426 --call total_tasks
+```
+
+The report above prints first, then the live result on the last line:
+
+```text
+Call: total_tasks() => 0
+```
+
+The deployed WorkProof contract holds no tasks yet, so the count is 0.
+Reading a task that does not exist fails cleanly instead of printing a
+result:
+
+```bash
+$ node verify.mjs --address 0xD974a24a033714a64987539EF13986f63E51d426 --call get_task --args '[0]'
+Error: call failed: Missing or invalid parameters.
+Double check you have provided the correct parameters.
+```
+
 ## Testing
 
 ```bash
@@ -46,7 +73,8 @@ npm test
 ```
 
 The suite uses `node:test` and runs fully offline. It checks the report
-format, the file-comparison helpers, and the recorded responses of the two
+format, the file-comparison helpers, the `--call` argument parsing,
+method validation and result formatting, and the recorded responses of the two
 deployed Studionet contracts (WorkProof
 `0xD974a24a033714a64987539EF13986f63E51d426` and PageWitness
 `0xBBE090C5c5cCd8a93A899867DE41a5c13a8f628D`) stored in
@@ -58,7 +86,6 @@ the fixture files, and update the expected hashes in
 
 ## Roadmap
 
-- Call view methods directly (`--call total_tasks`) and print the live result.
 - Publish as an npm package with a `genlayer-verify` binary.
 
 ## License

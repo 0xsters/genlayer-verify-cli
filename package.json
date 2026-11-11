@@ -3,8 +3,18 @@
   "version": "0.1.0",
   "description": "Inspect a deployed GenLayer Intelligent Contract: read its code and schema back from a GenLayer node and print what is actually deployed.",
   "type": "module",
-  "bin": { "genlayer-verify": "./verify.mjs" },
-  "scripts": { "test": "node --test", "verify": "node verify.mjs" },
+  "bin": {
+    "genlayer-verify": "./verify.mjs"
+  },
+  "scripts": {
+    "test": "node --test",
+    "verify": "node verify.mjs"
+  },
   "license": "MIT",
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "genlayer-js": "1.1.8"
+  }
 }

@@ -45,3 +45,48 @@ export function compareCode(local, deployed) {
   const deployedHash = sha256(normalize(deployed));
   return { localHash, deployedHash, match: localHash === deployedHash };
 }
+
+// Parse the --args value for --call: a JSON array of call arguments.
+// No value means no arguments. Anything that is not a JSON array is a
+// usage error, so the CLI fails before it talks to the node.
+export function parseCallArgs(text) {
+  if (text === null || text === undefined || text === '') return [];
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error('--args must be a JSON array, got: ' + text);
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error('--args must be a JSON array, got: ' + text);
+  }
+  return parsed;
+}
+
+// Resolve a --call method name against the deployed schema. Only view
+// methods may be called: this tool is read-only, so a write method is a
+// usage error, and the argument count must match the schema.
+export function resolveCallMethod(schema, name, args = []) {
+  const method = schema.methods[name];
+  if (!method) {
+    throw new Error('Unknown method: ' + name + ' (not in the deployed contract schema)');
+  }
+  if (!method.readonly) {
+    throw new Error('Method ' + name + ' is a write method; --call only runs view methods');
+  }
+  if (args.length !== method.params.length) {
+    throw new Error(
+      'Method ' + name + ' takes ' + method.params.length + ' argument(s), got ' + args.length
+    );
+  }
+  return method;
+}
+
+// Render one call result the way verify.mjs prints it. String results
+// print raw (get_task returns the task as JSON text); anything else
+// prints as JSON so numbers and objects stay readable.
+export function formatCallResult(name, args, result) {
+  const renderedArgs = args.map((a) => JSON.stringify(a)).join(', ');
+  const renderedResult = typeof result === 'string' ? result : JSON.stringify(result);
+  return 'Call: ' + name + '(' + renderedArgs + ') => ' + renderedResult;
+}
