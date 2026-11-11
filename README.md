@@ -39,10 +39,26 @@ Methods:
   total_tasks() -> int  [view]
 ```
 
+## Testing
+
+```bash
+npm test
+```
+
+The suite uses `node:test` and runs fully offline. It checks the report
+format, the file-comparison helpers, and the recorded responses of the two
+deployed Studionet contracts (WorkProof
+`0xD974a24a033714a64987539EF13986f63E51d426` and PageWitness
+`0xBBE090C5c5cCd8a93A899867DE41a5c13a8f628D`) stored in
+`test/fixtures/`: their `gen_getContractSchema` and
+`gen_getContractCode` responses as read from the node on 2026-11-11. To
+re-record after a redeploy, read both methods back from the node, replace
+the fixture files, and update the expected hashes in
+`test/verify.test.mjs`.
+
 ## Roadmap
 
 - Call view methods directly (`--call total_tasks`) and print the live result.
-- Recorded-fixture test suite so the output format is covered without a live node.
 - Publish as an npm package with a `genlayer-verify` binary.
 
 ## License

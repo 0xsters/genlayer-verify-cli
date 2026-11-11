@@ -5,8 +5,8 @@
 // the source they think it does. With --file, the deployed code is also
 // compared against a local contract file.
 
-import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { compareCode, formatReport } from './lib.mjs';
 
 const NETWORKS = {
   studionet: 'https://studio.genlayer.com/api',
@@ -45,42 +45,20 @@ async function rpcCall(method, params) {
   return data.result;
 }
 
-// Line endings and trailing blank lines differ between editors and the
-// deployed copy, so file comparison normalizes both before hashing.
-function normalize(code) {
-  return code.replace(/\r\n/g, '\n').replace(/\s+$/, '') + '\n';
-}
-function sha256(text) {
-  return createHash('sha256').update(text).digest('hex');
-}
-
 const schema = await rpcCall('gen_getContractSchema', [address]);
 const codeB64 = await rpcCall('gen_getContractCode', [address]);
 const code = Buffer.from(codeB64, 'base64').toString('utf8');
 
-console.log('Network:  ' + network + ' (' + endpoint + ')');
-console.log('Address:  ' + address);
-console.log('Code size: ' + code.length + ' chars');
-console.log('Code SHA-256: ' + sha256(code));
-const firstLine = code.split('\n')[0];
-console.log('Runner header: ' + firstLine);
-console.log('');
-console.log('Constructor params: ' + (schema.ctor.params.length ? JSON.stringify(schema.ctor.params) : '(none)'));
-console.log('Methods:');
-for (const [name, m] of Object.entries(schema.methods)) {
-  const params = m.params.map((p) => p[0] + ': ' + p[1]).join(', ');
-  console.log('  ' + name + '(' + params + ') -> ' + m.ret + (m.readonly ? '  [view]' : '  [write]'));
-}
+console.log(formatReport({ network, endpoint, address, schema, code }));
 
 if (file) {
   const local = await readFile(file, 'utf8');
-  const localHash = sha256(normalize(local));
-  const deployedHash = sha256(normalize(code));
+  const { localHash, deployedHash, match } = compareCode(local, code);
   console.log('');
   console.log('Local file: ' + file);
   console.log('Local SHA-256 (normalized):    ' + localHash);
   console.log('Deployed SHA-256 (normalized): ' + deployedHash);
-  if (localHash === deployedHash) {
+  if (match) {
     console.log('Comparison: MATCH, the deployed code is this file.');
   } else {
     console.log('Comparison: MISMATCH, the deployed code differs from this file.');
