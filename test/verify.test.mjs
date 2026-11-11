@@ -21,7 +21,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { compareCode, formatReport, normalize, sha256 } from '../lib.mjs';
+import { compareCode, formatCallResult, formatReport, normalize, parseCallArgs, resolveCallMethod, sha256 } from '../lib.mjs';
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures');
 
@@ -128,4 +128,35 @@ test('compareCode matches the recorded code and rejects a changed copy', async (
   assert.equal(compareCode(code.replace('WorkProofVerifier', 'SomethingElse'), code).match, false);
   // Same content with different line endings still matches.
   assert.equal(compareCode(code.replace(/\r\n/g, '\n'), code).match, true);
+});
+
+test('parseCallArgs parses a JSON array of call arguments', () => {
+  assert.deepEqual(parseCallArgs(null), []);
+  assert.deepEqual(parseCallArgs(undefined), []);
+  assert.deepEqual(parseCallArgs(''), []);
+  assert.deepEqual(parseCallArgs('[]'), []);
+  assert.deepEqual(parseCallArgs('[0]'), [0]);
+  assert.deepEqual(parseCallArgs('["https://example.com", 2, true]'), ['https://example.com', 2, true]);
+  assert.throws(() => parseCallArgs('not json'), /--args must be a JSON array/);
+  assert.throws(() => parseCallArgs('{"a": 1}'), /--args must be a JSON array/);
+  assert.throws(() => parseCallArgs('42'), /--args must be a JSON array/);
+});
+
+test('resolveCallMethod allows view methods and refuses the rest', async () => {
+  const { schema } = await loadFixture('workproof');
+  assert.equal(resolveCallMethod(schema, 'total_tasks').ret, 'int');
+  assert.equal(resolveCallMethod(schema, 'get_task', [0]).ret, 'string');
+  assert.throws(() => resolveCallMethod(schema, 'create_task', []), /write method/);
+  assert.throws(() => resolveCallMethod(schema, 'resolve_task', [0]), /write method/);
+  assert.throws(() => resolveCallMethod(schema, 'no_such_method'), /Unknown method/);
+  assert.throws(() => resolveCallMethod(schema, 'get_task', []), /takes 1 argument/);
+  assert.throws(() => resolveCallMethod(schema, 'get_task', [0, 1]), /takes 1 argument/);
+  assert.throws(() => resolveCallMethod(schema, 'total_tasks', [0]), /takes 0 argument/);
+});
+
+test('formatCallResult renders int, string and object results', () => {
+  assert.equal(formatCallResult('total_tasks', [], 3), 'Call: total_tasks() => 3');
+  assert.equal(formatCallResult('get_task', [0], '{"title": "x"}'), 'Call: get_task(0) => {"title": "x"}');
+  assert.equal(formatCallResult('get_task', [0], null), 'Call: get_task(0) => null');
+  assert.equal(formatCallResult('ask', ['https://example.com', 'q?'], 1), 'Call: ask("https://example.com", "q?") => 1');
 });
