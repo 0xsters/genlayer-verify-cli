@@ -44,6 +44,14 @@ Methods:
   total_tasks() -> int  [view]
 ```
 
+## Examples
+
+Worked examples against the two deployed Studionet contracts, with their
+deployed code hashes, verified live against the node:
+
+- [WorkProof](examples/workproof.md) — `0xD974a24a033714a64987539EF13986f63E51d426`
+- [PageWitness](examples/pagewitness.md) — `0xBBE090C5c5cCd8a93A899867DE41a5c13a8f628D`
+
 ## Calling a view method
 
 ```bash
